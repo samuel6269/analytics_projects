@@ -4,4 +4,6 @@ This repository contains interesting analytical projects I have worked on the pa
 
 - Pilot_Modeling_LSTM: Created a LSTM model for Delta Airlines to forecast pilot availability supply and demand for a given operational date.
 
+- Q_Learning_Trading: This project utilizes a Reinforcement Learning Q-Learner to automatically buy, sell, or hold stock shares of a given company by optimizing the cumulative returns of an initial portfolio.
+
 
