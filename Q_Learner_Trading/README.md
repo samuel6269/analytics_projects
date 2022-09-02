@@ -1,8 +1,8 @@
 <h1 align="center">Q-Learning Stock Trader</h1>
 
-This project directory contains the project files for a automated Q-learning stock trader. It currently assumes the portfolio can be in 3 different positions: 1000 shares long, 1000 shares short, or 0 shares. This model takes into account market impact of trades, as well as commission prices. Here are the steps to run the program.
+This project directory contains the project files for an automated Q-learning stock trader. It currently assumes the portfolio can be in 3 different positions: 1000 shares long, 1000 shares short, or 0 shares. This model takes into account market impact of trades, as well as commission prices. Here are the steps to run the program.
 
--testproject.py: This is the main file which runs the overall project. In the main function, you can choose choose a date range to train on, and another date range in the future to test the performance on. Here is where a user would specify the stock ticker of interest, as well as the impact and commission amount, and starting portfolio value. Two manual strategies will be performed, followed by the Q-learner and their performances are compared and evaluated.
+-testproject.py: This is the main file which runs the overall project. In the main function, you can choose choose a date range to train on, and another date range in the future to test the performance on. Here is where a user would specify the stock ticker of interest, as well as the impact and commission amount, and starting portfolio value. Two manual strategies will be performed, followed by the Q-learner, and their performances are compared and evaluated.
 
 -StrategyLearner.py: This contains the StrategyLearner class that creates a Q-learner object as well as provide useful helper functions
 
