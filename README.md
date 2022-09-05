@@ -6,4 +6,4 @@ This repository contains interesting analytical projects I have worked on the pa
 
 - Q_Learning_Trading: This project utilizes a Reinforcement Learning Q-Learner to automatically buy, sell, or hold stock shares of a given company by optimizing the cumulative returns of an initial portfolio.
 
-
+-RTS_Project: A project comparing the results of 8 different classification models using Scikit-Learn packages.
