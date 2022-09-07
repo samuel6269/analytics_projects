@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+	<!-- add title -->
+	
+    <!-- import required libraries here -->
+    <script type="text/javascript" src="../lib/d3.v5.min.js"></script>
+    <script type="text/javascript" src="../lib/d3-geo-projection.v2.min.js"></script>
+    <script type="text/javascript" src="../lib/d3-legend.min.js"></script>
+    <script type="text/javascript" src="../lib/d3-tip.min.js"></script>
+    
+	<style type="text/css">
+		/* define CSS rules here */
+
+        h1{
+            font-size:20px;
+        }
+
+        #dropbox_label{
+            font-size:14px;
+        }
+
+        #username{
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .d3-tip {
+            line-height: 1;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 2px;
+            font-size: 14px;
+        }
+	</style>
+</head>
+
+
+<body>
+    <!-- Add heading for the visualization -->
+    <h1>Average Rating of Board Games Across the World</h1>
+    <p id = "dropbox_label">Select Board Game:</p> 
+	<!-- Create dropdown element here. Options should be added after reading in game file, they should not be created here.-->
+	<select id="dropdown"></select>
+    <br/>
+	<!-- append visualization svg to this div-->
+    <div id="choropleth"></div>
+    <p id = "username">syong7</p>
+
+    <script>
+	
+		// enter code to define margin and dimensions for svg
+        var w = 1000;
+        var h = 600;
+        var padding = 60;
+        var left_padding = 60;
+        var right_padding = 150;
+
+		// enter code to create svg
+		var svg = d3.select("#choropleth")
+        .append("svg")
+        .attr("width", w)
+        .attr("height", h)
+        .attr("id","choropleth");
+
+		// enter code to create color scale
+        var color = d3.scaleQuantile()
+            //.domain(gameDataDomain) domain will be set based on game
+            .range(["rgb(239,243,255)","rgb(189,215,231)","rgb(107,174,214)","rgb(33,113,181)"]);
+		
+		// enter code to define tooltip
+        var tip = d3.tip()
+            .attr('class', 'd3-tip')
+            .html(function(d) { 
+                if(!(d.properties.numUsers == undefined)) {
+                    return "Country: " + d.properties.name + "</br>" + 
+                    "Game: " + d.properties.game + "</br>" + 
+                    "Avg Rating: " + d.properties.value + "</br>" + 
+                    "Number of Users: " + d.properties.numUsers + "</br>";
+                }
+                else {
+                    return "Country: " + d.properties.name + "</br>" + 
+                    "Game: " + d.properties.game + "</br>" + 
+                    "Avg Rating: N/A" + "</br>" + 
+                    "Number of Users: N/A" + "</br>";
+                }
+            });
+
+		// enter code to define projection and path required for Choropleth
+        var projection = d3.geoEckert4().translate([(w-padding)/2.25, (h-padding)/1.75]).scale([200])
+        var path = d3.geoPath().projection(projection);
+
+        
+        // define any other global variables 
+        var gameData = d3.csv("ratings-by-country.csv");
+        var mapData = d3.json("world_countries.json");
+
+        Promise.all([
+            // enter code to read files
+			mapData,gameData
+        ]).then(function(values){
+            // enter code to call ready() with required arguments
+            ready(null,values[0],values[1])
+        });
+        
+		
+		// this function should be called once the data from files have been read
+		// world: topojson from world_countries.json
+		// gameData: data from ratings-by-country.csv
+        function ready(error, world, gameData) {
+            // enter code to extract all unique games from gameData
+            var dataGroupByGames = d3.nest().key(function(d) {
+                return d.Game;
+            })
+            .entries(gameData);
+
+            var uniqueGames = dataGroupByGames.map(function(game){
+                return game.key;
+            });
+            
+            // enter code to append the game options to the dropdown
+            var dropdown = d3.select("#dropdown")
+            
+            dropdown.selectAll("option")
+            .data(uniqueGames)
+            .enter()
+            .append("option")
+            .attr("value", function(d) { return d; })
+            .text(function(d) { return d; });
+            // event listener for the dropdown. Update choropleth and legend when selection changes. Call createMapAndLegend() with required arguments.
+            
+            dropdown.on("change", function(d) {
+                selectedGame = d3.event.target.value;
+                createMapAndLegend(world, dataGroupByGames, selectedGame)
+            });
+            
+
+            // create Choropleth with default option. Call createMapAndLegend() with required arguments.
+            //console.log(world)
+            createMapAndLegend(world, dataGroupByGames, "6 nimmt!");
+        }
+
+		// this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
+		// also use this function to update Choropleth and legend when a different game is selected from the dropdown
+        function createMapAndLegend(world, gameData, selectedGame){
+            //extract the data
+        
+            var selectedGameData = gameData.find(element => element.key == selectedGame);
+            
+            /*
+            var gameDataDomain = d3.extent(selectedGameData.values.map(function(game) {
+                return +game["Average Rating"]
+            }));
+            */
+            
+            //Quantile Scale requres domain of all sample values
+            var gameDataDomain = selectedGameData.values.map(function(game) {
+                return +game["Average Rating"]
+            });
+
+            var worldWithGameData = joinMapGameData(world, selectedGameData)
+            color.domain(gameDataDomain);
+
+           d3.selectAll("path").remove();
+
+           svg.call(tip);
+
+            // draw map
+            svg.selectAll("path")
+                .data(worldWithGameData.features)
+                .enter()
+                .append("path")
+                .attr("class","continent")
+                .attr("d", path)
+                .style("fill", function(d) {
+                    //Get data value
+                    var value = d.properties.value;
+                    if (value) {
+                        //If value exists…
+                        return color(value);
+                    } else {
+                        //If value is undefined…
+                        return "#ccc";
+                    }
+                })
+                .on('mouseover', tip.show)
+                .on('mouseout', tip.hide);
+            
+            //draw legend
+            svg.append("g")
+                .attr("class", "legendQuant")
+                .attr("transform", "translate(" + (w-2*padding) + "," + (h-padding)/3 + ")");
+
+            var legend = d3.legendColor()
+                .labelFormat(d3.format(".2f"))
+                .useClass(false)
+                .scale(color);
+
+            svg.select(".legendQuant")
+                .call(legend);
+            
+        }
+
+        function joinMapGameData(world, selectedGameData) {
+            var worldWithGameData = JSON.parse(JSON.stringify(world)) //deep copy of world without changing world
+
+            for (var i = 0; i < selectedGameData.values.length; i++) {
+                //Grab country name
+                var dataCountry = selectedGameData.values[i].Country;
+
+                //Grab Game name
+                var dataGame = selectedGameData.values[i].Game;
+
+                //Grab # of users
+                var numUsers = selectedGameData.values[i]["Number of Users"];
+
+                //Grab data value, and convert from string to float
+                var dataValue = parseFloat(selectedGameData.values[i]["Average Rating"]);
+                //Find the corresponding state inside the GeoJSON
+                for (var j = 0; j < worldWithGameData.features.length; j++) {
+                
+                    var worldCountry = worldWithGameData.features[j].properties.name;
+        
+                    if (dataCountry == worldCountry) {
+                
+                        //Copy the data value into the JSON
+                        worldWithGameData.features[j].properties.value = dataValue;
+                        worldWithGameData.features[j].properties.game = dataGame;
+                        worldWithGameData.features[j].properties.numUsers = numUsers;
+                    }
+
+                    //If no game data, just attach the game name
+                    else{
+                        worldWithGameData.features[j].properties.game = dataGame;
+                    }
+                }		
+            }
+
+            return worldWithGameData
+        }
+    </script>
+
+</body>
+
+</html>
