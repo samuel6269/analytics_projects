@@ -7,3 +7,5 @@ This repository contains interesting analytical projects I have worked on the pa
 - Q_Learning_Trading: This project utilizes a Reinforcement Learning Q-Learner to automatically buy, sell, or hold stock shares of a given company by optimizing the cumulative returns of an initial portfolio.
 
 - RTS_Project: A project comparing the results of 8 different classification models using Scikit-Learn packages.
+
+- D3_Choropleth_Map: A D3 interactive choropleth map that visualizes the average board game rating by country. Data is based on Board Game Geek community. 
